@@ -1,0 +1,7 @@
+to read a register:
+rd 14\n\r
+
+the dcrc will respond with the register value, followed by the newline and carriage return characters.
+
+to read the trigger buffer:
+rt\n\r
