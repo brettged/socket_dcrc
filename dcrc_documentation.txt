@@ -5,3 +5,34 @@ the dcrc will respond with the register value, followed by the newline and carri
 
 to read the trigger buffer:
 rt\n\r
+
+to read the fourth waveform and request the sixth:
+wr a %c%c%c%c\rwr b %c%c%c%\rrdb 14 %x
+
+    /// Encode a word that encodes the origin of the trigger.  Here is       
+    /// the intended byte assignment:
+    /// bits 32-26: unused
+    /// bits 25-21: trigger type (types to be defined, 0=default)          
+    /// bits 20-14: tower of 2nd (coincident) trigger source
+    /// bits 13-11: DCRC# of 2nd (coincident) trigger source
+    /// bits 10-04: tower of 1st (primary) trigger source
+    /// bits 03-01: DCRC# of 1st (primary) trigger source
+
+
+// First unpack 8 bytes of header info:
+    // Bytes 0-1: number of triggers in this bank
+    // Bytes 2-5: time at which trigger primitives were read out
+    // Bytes 6-7: value of "rd 0" when trigger primitives were read out
+
+// Ideally I would be unpacking information that looks like this:
+      // Each trigger will have 10 bytes of data stored with it
+      // Byte 0: which DCRC in the array the trigger came from
+      // Bytes 1-2: trigger bit information (16 channels)
+      // Byte 3: Clock "rollover" value: one byte encoding 0-255
+      // Bytes 4-9: ASCII bytes for trigger address
+      // Note: This code is not currently compatible with what the front end
+      // will put out;
+      // So instead what I have coming from towerfe3.exe is this (13 bytes):
+      // Bytes 0-7: trigger address, including trigger bits and address
+      // Byte 8: which DCRCs to read--ignore this byte
+      // Bytes 9-12: trigger origin word---lower 10 bits give which DCRC
