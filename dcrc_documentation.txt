@@ -9,6 +9,8 @@ rt\n\r
 to read the fourth waveform and request the sixth:
 wr a %c%c%c%c\rwr b %c%c%c%\rrdb 14 %x
 
+
+these are encoded by the Midas logger (i.e., post-DCRC):
     /// Encode a word that encodes the origin of the trigger.  Here is       
     /// the intended byte assignment:
     /// bits 32-26: unused
