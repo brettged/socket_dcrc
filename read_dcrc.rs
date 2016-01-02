@@ -3,6 +3,19 @@ use std::io;
 use std::io::prelude::*;
 use std::net::TcpStream;
 
+
+fn check_tx(tx: &String) -> Result<&'static str, &'static str>{
+    let check_tx: Vec<&str> = tx.split_whitespace().collect();
+
+    match check_tx[0] {
+      "rd" => return Ok("read a register"),
+      "rt" => return Ok("read trigger list"),
+      "wr" => return Ok("retrieve waveform data"),
+      "help" => return Ok("show help menu"),
+      _ => return Err("That is not a valid DCRC command."),
+    }
+}
+
 fn main() {
   let args: Vec<String> = env::args().collect();
   let ref addr = args[1];
@@ -12,18 +25,19 @@ fn main() {
 
   loop {
     println!("Enter the DCRC register to read: ");
-    let mut guess = String::new();
+    let mut tx = String::new();
 
-    io::stdin().read_line(&mut guess)
+    io::stdin().read_line(&mut tx)
         .ok()
         .expect("failed to read line");
+    
 
-    let guess: u32 = guess.trim().parse()
-        .ok()
-        .expect("please type a DCRC register:");
+    match check_tx(&tx) {
+      Ok(_) => {},
+      Err(e) => panic!(e.to_string()),
+    }
 
-
-    let write_str = format!("rd {}\r\n",guess);
+    let write_str = format!("{}\r\n",tx.trim());
 
     let _ = stream.write(write_str.as_bytes());
 
@@ -32,7 +46,7 @@ fn main() {
     stream.read(&mut rx).unwrap();
 
     //println!("{:?}",rx);
-    print!("register 0x{}: ", guess);
+    print!("{}: ", tx.trim());
     for dat in &rx {
       print!("{:b} ",dat);
     }
