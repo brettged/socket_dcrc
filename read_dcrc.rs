@@ -2,7 +2,7 @@ use std::env;
 use std::io;
 use std::io::prelude::*;
 use std::net::TcpStream;
-
+use std::time::Duration;
 
 fn check_tx(tx: &String) -> Result<&'static str, &'static str>{
     let check_tx: Vec<&str> = tx.split_whitespace().collect();
@@ -19,11 +19,12 @@ fn check_tx(tx: &String) -> Result<&'static str, &'static str>{
 fn main() {
   let args: Vec<String> = env::args().collect();
   let ref addr = args[1];
-  println!("{}",&addr[..]);
 
   let mut stream = TcpStream::connect(&addr[..]).unwrap();
+  let two_ms = Duration::new(0,200);
+  stream.set_read_timeout(Some(two_ms)).unwrap();
 
-  loop {
+  //loop {
     println!("Enter the DCRC register to read: ");
     let mut tx = String::new();
 
@@ -42,14 +43,26 @@ fn main() {
     let _ = stream.write(write_str.as_bytes());
 
     //let response = stream.read(&mut [0; 128]);
-    let mut rx = vec![0; 10];
-    stream.read(&mut rx).unwrap();
+    let mut rx = Vec::new();
+    let mut keep_reading = true;
+    while keep_reading {
+       let mut rx_sub = vec![0; 10];
+       match stream.read(&mut rx_sub) {
+          Ok(bytes) if bytes > 0 => {rx_sub.truncate(bytes); rx.extend(rx_sub.into_iter());},
+          Ok(_) => keep_reading = false,
+          Err(_) => keep_reading = false,
+       } 
+    }
+
 
     //println!("{:?}",rx);
     print!("{}: ", tx.trim());
+    //print!("{} bytes ", bytes);
     for dat in &rx {
       print!("{:b} ",dat);
     }
     println!("");
-  }
+
+    println!("the characters are: {}",String::from_utf8(rx).unwrap());
+  //}
 }
