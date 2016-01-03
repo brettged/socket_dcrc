@@ -3,12 +3,42 @@ rd 14\n\r
 
 the dcrc will respond with the register value, followed by the newline and carriage return characters.
 
+From the DCRC onboard help:
+RDB adr c  Read Data Binary,  adr(h), byteCnt=evenCnt(h)
+ RDW cnt    Read sdRam Binary Addr=0x18, cnt= wordCnt(h)
+ RD adr c   Read Adr(h) ASCII, c=wordCnt(hex), no_adr_increment
+ WR adr d   Write Addr ASCII, d=Data16 (word write)
+ RT         Read Trig FIFO, ASCII LngWords Cnt, Data0, Data1, Data2...
+
+
 to read the trigger buffer:
 rt\n\r
+
+I think this is actually the information for the dcrc trigger buffer!
+But I'm not sure.  It's possible the time and the value of 'rd 0' are put in inside trigger or tower.
+// First unpack 8 bytes of header info:
+    // Bytes 0-1: number of triggers in this bank
+    // Bytes 2-5: time at which trigger primitives were read out
+    // Bytes 6-7: value of "rd 0" when trigger primitives were read out
 
 to read the fourth waveform and request the sixth:
 wr a %c%c%c%c\rwr b %c%c%c%\rrdb 14 %x
 
+the waveform is read in towerfe3.c.  First the addresses are prepped, and then the read command is issued.
+
+	if ((triggerword & 0x3fffff) < phononprepulse[dcrc]) 
+	 phtriggerword=0x400000+(triggerword & 0x3fffff) - phononprepulse[dcrc];
+	phtriggerword += (triggerword & 0xff000000);
+	sprintf (newaddr, "%08lx", phtriggerword);
+
+
+	// Read the second waveform and request the third
+	for (int dcrc=1; dcrc<=6; dcrc++) {
+	  if (!dcrcread[dcrc]) continue;
+	  sprintf(command,"wr 4 %c%c%c%c\rwr 5 %c%c%c%c\rrdb 14 %x",
+		  phaddr[dcrc][whichtrigger][0],phaddr[dcrc][whichtrigger][1],phaddr[dcrc][whichtrigger][2],phaddr[dcrc][whichtrigger][3],
+		  phaddr[dcrc][whichtrigger][4],phaddr[dcrc][whichtrigger][5],phaddr[dcrc][whichtrigger][6],phaddr[dcrc][whichtrigger][7],phonon_nbytes[dcrc]);
+	  int avail = gDataSocket[dcrc]->available();
 
 these are encoded by the Midas logger (i.e., post-DCRC):
     /// Encode a word that encodes the origin of the trigger.  Here is       
@@ -20,11 +50,6 @@ these are encoded by the Midas logger (i.e., post-DCRC):
     /// bits 10-04: tower of 1st (primary) trigger source
     /// bits 03-01: DCRC# of 1st (primary) trigger source
 
-
-// First unpack 8 bytes of header info:
-    // Bytes 0-1: number of triggers in this bank
-    // Bytes 2-5: time at which trigger primitives were read out
-    // Bytes 6-7: value of "rd 0" when trigger primitives were read out
 
 // Ideally I would be unpacking information that looks like this:
       // Each trigger will have 10 bytes of data stored with it

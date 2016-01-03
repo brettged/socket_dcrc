@@ -21,11 +21,14 @@ fn main() {
   let ref addr = args[1];
 
   let mut stream = TcpStream::connect(&addr[..]).unwrap();
-  let two_ms = Duration::new(0,200);
-  stream.set_read_timeout(Some(two_ms)).unwrap();
+  //a two millisecond timeout is fine for 'rd XX' commands
+  //but 'rt' needs more time
+  //let two_ms = Duration::new(0,5000);
+  let two_s = Duration::new(2,0);
+  stream.set_read_timeout(Some(two_s)).unwrap();
 
   //loop {
-    println!("Enter the DCRC register to read: ");
+    println!("Enter a DCRC command: ");
     let mut tx = String::new();
 
     io::stdin().read_line(&mut tx)
@@ -59,7 +62,7 @@ fn main() {
     print!("{}: ", tx.trim());
     //print!("{} bytes ", bytes);
     for dat in &rx {
-      print!("{:b} ",dat);
+      print!("{:#X} ",dat);
     }
     println!("");
 
