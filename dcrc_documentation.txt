@@ -1,25 +1,48 @@
-to read a register:
-rd 14\n\r
+###########################
+Communicating with the DCRC
+###########################
 
-the dcrc will respond with the register value, followed by the newline and carriage return characters.
+You can communicate with the DCRC via telnet.  Typically, connection to port 5002 is possible.  The telnet syntax is:
+$ telnet ip_addr:port
 
-From the DCRC onboard help:
+From the DCRC onboard help (type 'help'):
 RDB adr c  Read Data Binary,  adr(h), byteCnt=evenCnt(h)
  RDW cnt    Read sdRam Binary Addr=0x18, cnt= wordCnt(h)
  RD adr c   Read Adr(h) ASCII, c=wordCnt(hex), no_adr_increment
  WR adr d   Write Addr ASCII, d=Data16 (word write)
  RT         Read Trig FIFO, ASCII LngWords Cnt, Data0, Data1, Data2...
 
+to read a register:
+rd 14\n\r
+
+the dcrc will respond with the register value, followed by the newline and carriage return characters.  In general, the DCRC output consists of the data followed by the newline and carriage return characters (two bytes).
+
+For example, 'rd 0' returns six bytes: the first four are a memory address.  the last two are \n\r.
+
+##################
+The trigger buffer
+##################
 
 to read the trigger buffer:
 rt\n\r
 
-I think this is actually the information for the dcrc trigger buffer!
-But I'm not sure.  It's possible the time and the value of 'rd 0' are put in inside trigger or tower.
+the response to 'rt' consists of a header that gives the number of triggers, followed by the trigger addresses.  The data is separated by the two-byte delimiter '\n\r'.  Both the header data and the address data are 8 bytes.  To read the header or an address datum requires a 10-byte read because of the '\n\r' characters.
+
+To calculate the number of triggers, you must realize that each of the eight bytes represents a character - and that these eight characters give the number of triggers in hexadecimal.  Don't expect to convert the response from 'rt' into a number solely with math - you also need an ascii table.
+
+Here is an example: 110000 110000 110000 110000 110000 110000 111000 110000 1101 1010 = '00000080\n\r' => 8*16^1 = 128 triggers.
+ 
+
+I think the time and the value of 'rd 0' are put in inside trigger or tower.
 // First unpack 8 bytes of header info:
     // Bytes 0-1: number of triggers in this bank
     // Bytes 2-5: time at which trigger primitives were read out
     // Bytes 6-7: value of "rd 0" when trigger primitives were read out
+
+
+#############
+Waveform data
+#############
 
 to read the fourth waveform and request the sixth:
 wr a %c%c%c%c\rwr b %c%c%c%\rrdb 14 %x
