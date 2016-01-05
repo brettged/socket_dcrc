@@ -19,6 +19,8 @@ the dcrc will respond with the register value, followed by the newline and carri
 
 For example, 'rd 0' returns six bytes: the first four are a memory address.  the last two are \n\r.
 
+For additional documentation on the DCRC boards, see https://confluence.slac.stanford.edu/display/CDMS/DCRC+Documentation.
+
 ##################
 The trigger buffer
 ##################
@@ -32,12 +34,7 @@ To calculate the number of triggers, you must realize that each of the eight byt
 
 Here is an example: 110000 110000 110000 110000 110000 110000 111000 110000 1101 1010 = '00000080\n\r' => 8*16^1 = 128 triggers.
  
-
-I think the time and the value of 'rd 0' are put in inside trigger or tower.
-// First unpack 8 bytes of header info:
-    // Bytes 0-1: number of triggers in this bank
-    // Bytes 2-5: time at which trigger primitives were read out
-    // Bytes 6-7: value of "rd 0" when trigger primitives were read out
+In the RevC DCRC, one trigger word from an 'rt' command consists of eight bytes - better thought of in this case as four groups of 16 bits.  [This following is probably wrong?] The actual address of the phonon waveform are the lower five bits and can be extracted from the 16-bit group by masking with 0xfffff.  The four groups of 16 bits correspond to phonon channels A, B, C, and D.
 
 
 #############
