@@ -54,6 +54,8 @@ fn main() {
     let _ = stream.write(write_str.as_bytes());
 
     //let response = stream.read(&mut [0; 128]);
+    // the first ten bytes tell how many triggers
+    // need to be read out
     let mut handle = stream1.take(10);
 
     let mut rx_header = vec![0; 10];
@@ -63,20 +65,22 @@ fn main() {
     let num_triggers_u32 = u32::from_str_radix(num_triggers.as_str(),16).unwrap();
     println!("number of triggers is {}", num_triggers_u32);
 
+    // now that we know the number of triggers,
+    // read the rest of the output
+    // each trigger is 10 bytes of data
+    // the first eight bytes are the characters of the hex number
+    // the last two bytes are \r and \n characters
     handle = stream2.take(10*num_triggers_u32 as u64);
     let mut rx = vec![0; 10*num_triggers_u32 as usize];
     handle.read(&mut rx).unwrap();
 
-
-    //Ok(bytes) if bytes > 0 => {rx_sub.truncate(bytes); rx.extend(rx_sub.into_iter());},
-
+    let mut addr = rx.split('\r\n').collect();
 
     //println!("{:?}",rx);
-    for dat in &rx {
-      print!("{:b} ",dat);
+    for dat in &addr {
+      println!("{:b} ",dat);
       //print!("{:#X} ",dat);
     }
-    println!("");
 
     println!("the characters are: \n{}",String::from_utf8(rx).unwrap());
   //}
