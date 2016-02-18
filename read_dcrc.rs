@@ -74,14 +74,14 @@ fn main() {
     let mut rx = vec![0; 10*num_triggers_u32 as usize];
     handle.read(&mut rx).unwrap();
 
-    let mut addr = rx.split('\r\n').collect();
+    let rx_str = String::from_utf8(rx).unwrap();
+    let addr: Vec<&str> = rx_str.split_whitespace().collect();
 
     //println!("{:?}",rx);
     for dat in &addr {
-      println!("{:b} ",dat);
+      println!("{} ",dat);
       //print!("{:#X} ",dat);
     }
 
-    println!("the characters are: \n{}",String::from_utf8(rx).unwrap());
   //}
 }
